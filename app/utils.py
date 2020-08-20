@@ -1,5 +1,6 @@
 from app import dao, app
 from datetime import datetime
+from flask import session
 import csv
 import os
 
@@ -15,3 +16,31 @@ def export_csv():
             writer.writerow(product)
 
     return p
+
+
+def upload_avatar(file):
+    path = "images/avatar/" + file.filename
+    file.save(os.path.join(app.root_path, "static/", path))
+
+    return path
+
+
+def add_to_cart(id, name, price):
+    if 'cart' not in session:
+        session['cart'] = {}
+
+    cart = session['cart']
+    key = str(id)
+    if key in cart: # da co sp trong io
+        cart[key]["quantity"] = cart[key]["quantity"] + 1
+    else: # chua co sp trong io
+        cart[key] = {
+            "id": id,
+            "name": name,
+            "price": price,
+            "quantity": 1
+        }
+
+    session["cart"] = cart
+
+    return sum([item["quantity"] for item in  session["cart"].values()])

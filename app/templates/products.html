@@ -6,6 +6,23 @@
     <link rel="stylesheet"
           href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css" />
     <script>
+        function add_to_cart(id, name, price) {
+            fetch("/api/cart", {
+                method: "post",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    id: id,
+                    name: name,
+                    price: price
+                })
+            }).then(res => res.json()).then(data => {
+                var cart = document.getElementById("cartId")
+                cart.innerText = data.quantity
+            })
+        }
+
         function delete_product(productId) {
             var c = confirm("Ban chac chan xoa khong?");
             if (c == true) {
@@ -27,7 +44,7 @@
 </head>
 <body>
     <div class="container">
-        <h1 class="text-center">QUẢN LÝ SẢN PHẨN</h1>
+        <h1 class="text-center">QUẢN LÝ SẢN PHẨN <span id="cartId" class="text-danger">0</span></h1>
         <form>
             <div class="form-group">
                 <label>Tìm theo tên</label>
@@ -76,6 +93,7 @@
                 <td>
                     <a href="{{ url_for('add_or_update_product', product_id=p.id) }}">Cập nhật</a> |
                     <a href="javascript:;" onclick="delete_product({{p.id}})">Xóa</a>
+                    <a href="javascript:;" onclick="add_to_cart({{p.id}}, '{{p.name}}', {{ p.price }})">THEM VAO GIO</a>
                 </td>
             </tr>
             {% endfor %}

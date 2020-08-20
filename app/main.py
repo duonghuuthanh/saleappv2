@@ -1,6 +1,7 @@
 from flask import render_template, request, redirect, url_for, jsonify, send_file, session
 from app import app, dao, utils
 from functools import wraps
+import json
 
 
 def login_required(f):
@@ -125,7 +126,6 @@ def export_product():
 
 
 @app.route("/login", methods=["get", "post"])
-@login_required
 def login():
     err_msg = ""
     if request.method == "POST":
@@ -152,5 +152,42 @@ def logout():
     return redirect(url_for("index"))
 
 
+@app.route("/register", methods=["get", "post"])
+def register():
+    err_msg = ""
+    if request.method == "POST":
+        name = request.form.get("name")
+        username = request.form.get("username")
+        password = request.form.get("password")
+        confirm = request.form.get("confirm")
+        if password.strip() != confirm.strip():
+            err_msg = "The password does not match!"
+        else:
+            path = utils.upload_avatar(file=request.files["avatar"])
+            if dao.add_user(name=name, username=username,
+                            password=password, avatar=path):
+                return redirect(url_for('login'))
+            else:
+                err_msg = "Something wrong!!!"
+
+    return render_template("register.html", err_msg=err_msg)
+
+
+@app.route("/api/cart", methods=['post'])
+def add_to_cart():
+    data = json.loads(request.data)
+    product_id = data["id"]
+    name = data["name"]
+    price = data["price"]
+
+    try:
+        q = utils.add_to_cart(id=product_id, name=name, price=price)
+
+        return jsonify({"status": 200, "error_message": "successful", "quantity": q})
+    except Exception as ex:
+        return jsonify({"status": 500, "error_message": str(ex)})
+
+
+
 if __name__ == "__main__":
-    app.run(debug=False)
+    app.run(debug=False, port=5050)
