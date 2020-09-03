@@ -2,38 +2,44 @@ from app import app
 import json
 import os
 import hashlib
+from app.models import Category, Product
 
 
 def read_categories():
-    with open(os.path.join(app.root_path, "data/categories.json"),
-              encoding="utf-8") as f:
-        return json.load(f)
+    return Category.query.all()
 
 
 def read_product_by_id(product_id):
-    products = read_products()
-    for p in products:
-        if p["id"] == product_id:
-            return p
-
-    return None
+    return Product.query.get(product_id)
 
 
-def read_products(category_id=0, keyword=None, from_price=None, to_price=None):
-    with open(os.path.join(app.root_path, "data/products.json"),
-              encoding="utf-8") as f:
-        products = json.load(f)
+def read_products(category_id=0, keyword=None, from_price=None, to_price=None, latest=True):
+    q = Product.query
 
-        if category_id > 0:
-            products = [p for p in products if p["category_id"] == category_id]
+    if keyword:
+        q = q.filter(Product.name.contains(keyword))
 
-        if keyword:
-            products = [p for p in products if p["name"].lower().find(keyword.lower()) >= 0]
+    if from_price and to_price:
+        q = q.filter(Product.price__gt__(from_price), Product.price.__lt__(to_price))
 
-        if from_price and to_price:
-            products = [p for p in products if p["price"] >= float(from_price) and p["price"] <= float(to_price)]
+    if latest:
+        return q.all()[:5]
 
-        return products
+    return q.all()
+    # with open(os.path.join(app.root_path, "data/products.json"),
+    #           encoding="utf-8") as f:
+    #     products = json.load(f)
+    #
+    #     if category_id > 0:
+    #         products = [p for p in products if p["category_id"] == category_id]
+    #
+    #     if keyword:
+    #         products = [p for p in products if p["name"].lower().find(keyword.lower()) >= 0]
+    #
+    #     if from_price and to_price:
+    #         products = [p for p in products if p["price"] >= float(from_price) and p["price"] <= float(to_price)]
+    #
+    #     return products
 
 
 def update_product(product_id, name, description, price, images, category_id):

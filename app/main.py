@@ -1,23 +1,12 @@
 from flask import render_template, request, redirect, url_for, jsonify, send_file, session
 from app import app, dao, utils
-from functools import wraps
+from app.decorator import login_required
 import json
-
-
-def login_required(f):
-    @wraps(f)
-    def check(*args, **kwargs):
-        if not session.get("user"):
-            return redirect(url_for("login", next=request.url))
-
-        return f(*args, **kwargs)
-
-    return check
 
 
 @app.route("/")
 def index():
-    return render_template("index.html")
+    return render_template("index.html", latest_products=dao.read_products(latest=True))
 
 
 @app.route("/products")
@@ -173,6 +162,11 @@ def register():
     return render_template("register.html", err_msg=err_msg)
 
 
+@app.route('/cart')
+def cart():
+    return render_template('cart.html')
+
+
 @app.route("/api/cart", methods=['post'])
 def add_to_cart():
     data = json.loads(request.data)
@@ -181,13 +175,23 @@ def add_to_cart():
     price = data["price"]
 
     try:
-        q = utils.add_to_cart(id=product_id, name=name, price=price)
+        q, s = utils.add_to_cart(id=product_id, name=name, price=price)
 
-        return jsonify({"status": 200, "error_message": "successful", "quantity": q})
+        return jsonify({"status": 200, "error_message": "successful", "quantity": q, "sum_cart": s})
     except Exception as ex:
         return jsonify({"status": 500, "error_message": str(ex)})
 
 
+@app.context_processor
+def common_data():
+    q, s = utils.cart_stats()
+    return {
+        'categories': dao.read_categories(),
+        'cart_quantity': q,
+        'cart_sum': s
+    }
+
 
 if __name__ == "__main__":
+    from app.admin import *
     app.run(debug=False, port=5050)

@@ -42,5 +42,14 @@ def add_to_cart(id, name, price):
         }
 
     session["cart"] = cart
+    return cart_stats()
 
-    return sum([item["quantity"] for item in  session["cart"].values()])
+
+def cart_stats():
+    q = 0
+    s = 0
+    if 'cart' in session and session['cart']:
+        for item in session["cart"].values():
+            q = q + item['quantity']
+            s = s + item['quantity'] * item['price']
+    return q, s
