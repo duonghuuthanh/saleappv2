@@ -1,8 +1,8 @@
-from app import app
+from app import app, db
 import json
 import os
 import hashlib
-from app.models import Category, Product
+from app.models import Category, Product, Receipt, ReceiptDetail
 
 
 def read_categories():
@@ -120,6 +120,28 @@ def add_user(name, username, password, avatar):
     users.append(user)
 
     return update_json(users, path="data/users.json")
+
+
+def add_receipt(items):
+    try:
+        r = Receipt()
+        db.session.add(r)
+        db.session.commit()
+
+        for item in items:
+            d = ReceiptDetail()
+            d.quantity = item['quantity']
+            d.price = item['price']
+            d.product_id = item['id']
+            d.receipt_id = r.id
+
+            db.session.add(d)
+
+        db.session.commit()
+        return True
+    except Exception as ex:
+        print(ex)
+        return False
 
 
 

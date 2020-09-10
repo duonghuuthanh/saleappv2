@@ -34,3 +34,20 @@ function delete_product(productId) {
         });
     }
 }
+
+function pay() {
+    if (confirm("Bạn chắc chắn thanh toán?") == true) {
+        fetch("/api/pay", {
+            "method": "post",
+            "headers": {
+                "Content-Type": "application/json"
+            }
+        }).then(res => res.json()).then(data => {
+            if (data.status == 200) {
+                location.reload()
+            } else {
+                alert("Thanh toán thất bại")
+            }
+        }).catch(err => alert("HỆ THỐNG LỖI!!!"))
+    }
+}

@@ -21,6 +21,16 @@ def product_list():
                                                       to_price=to_price))
 
 
+@app.route("/api/pay", methods=['post'])
+def pay():
+    if 'cart' in session and session['cart']:
+        if dao.add_receipt(session['cart'].values()):
+            del session['cart']
+            return jsonify({"status": 200, "message": "successful"})
+
+    return jsonify({"status": 500, "message": "failed"})
+
+
 @app.route("/api/products", methods=["get", "post"])
 def api_product_list():
     if request.method == "POST":
